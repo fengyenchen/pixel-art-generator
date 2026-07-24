@@ -1,121 +1,47 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import Header from './components/Header'
+import Toolbar from './components/Toolbar'
+import PixelCanvas from './components/Canvas/PixelCanvas'
+import ControlPanel from './components/ControlPanel'
+import type { EditorTool } from './types/editor'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [activeTool, setActiveTool] = useState<EditorTool>('pencil')
+  const [canvasWidth, setCanvasWidth] = useState(32)
+  const [canvasHeight, setCanvasHeight] = useState(32)
+  const [showGrid, setShowGrid] = useState(true)
+  const [pixelSize, setPixelSize] = useState(16)
+  const [zoom, setZoom] = useState(100)
+  const [color, setColor] = useState('#52525b')
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <Header />
 
-      <div className="ticks"></div>
+      <main className="mx-auto flex w-full flex-1 gap-4 p-4 overflow-hidden lg:gap-5 lg:p-5">
+        <Toolbar
+          activeTool={activeTool}
+          color={color}
+          onColorChange={setColor}
+          onToolChange={setActiveTool}
+        />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        <PixelCanvas width={canvasWidth} height={canvasHeight} showGrid={showGrid} zoom={zoom} />
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        <ControlPanel
+          canvasWidth={canvasWidth}
+          canvasHeight={canvasHeight}
+          pixelSize={pixelSize}
+          showGrid={showGrid}
+          zoom={zoom}
+          onCanvasWidthChange={setCanvasWidth}
+          onCanvasHeightChange={setCanvasHeight}
+          onGridChange={setShowGrid}
+          onPixelSizeChange={setPixelSize}
+          onZoomChange={setZoom}
+        />
+      </main>
+    </div>
   )
 }
 
