@@ -75,6 +75,7 @@ button {
 }
 
 .canvas-workspace {
+  background-color: var(--canvas-workspace);
   background-image: repeating-conic-gradient(var(--canvas-pattern) 0 25%, var(--canvas-workspace) 0 50%);
   background-size: 20px 20px;
 }
@@ -83,7 +84,6 @@ button {
   background-image:
     linear-gradient(to right, var(--canvas-grid) 1px, transparent 1px),
     linear-gradient(to bottom, var(--canvas-grid) 1px, transparent 1px);
-  background-size: 20px 20px;
 }
 
 @media (max-width: 640px) {

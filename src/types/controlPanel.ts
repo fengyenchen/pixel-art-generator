@@ -16,6 +16,7 @@ export interface RangeRowProps {
   value: number
   min: number
   max: number
+  step?: number
   suffix?: string
   onChange: (value: number) => void
 }

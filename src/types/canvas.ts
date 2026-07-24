@@ -6,6 +6,7 @@ export interface CanvasSize {
 export interface PixelCanvasProps {
   width: number
   height: number
+  pixelSize: number
   showGrid: boolean
   zoom: number
 }

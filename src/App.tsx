@@ -7,18 +7,18 @@ import type { EditorTool } from './types/editor'
 
 function App() {
   const [activeTool, setActiveTool] = useState<EditorTool>('pencil')
-  const [canvasWidth, setCanvasWidth] = useState(32)
-  const [canvasHeight, setCanvasHeight] = useState(32)
+  const [canvasWidth, setCanvasWidth] = useState(64)
+  const [canvasHeight, setCanvasHeight] = useState(64)
   const [showGrid, setShowGrid] = useState(true)
-  const [pixelSize, setPixelSize] = useState(16)
-  const [zoom, setZoom] = useState(100)
+  const [pixelSize, setPixelSize] = useState(8)
+  const [zoom, setZoom] = useState(800)
   const [color, setColor] = useState('#52525b')
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Header />
 
-      <main className="mx-auto flex w-full flex-1 gap-4 p-4 overflow-hidden lg:gap-5 lg:p-5">
+      <main className="mx-auto grid w-full flex-1 grid-cols-[auto_minmax(0,1fr)] items-start gap-4 p-4 xl:grid-cols-[auto_minmax(0,1fr)_auto] xl:gap-5 xl:p-5">
         <Toolbar
           activeTool={activeTool}
           color={color}
@@ -26,7 +26,13 @@ function App() {
           onToolChange={setActiveTool}
         />
 
-        <PixelCanvas width={canvasWidth} height={canvasHeight} showGrid={showGrid} zoom={zoom} />
+        <PixelCanvas
+          width={canvasWidth}
+          height={canvasHeight}
+          pixelSize={pixelSize}
+          showGrid={showGrid}
+          zoom={zoom}
+        />
 
         <ControlPanel
           canvasWidth={canvasWidth}
