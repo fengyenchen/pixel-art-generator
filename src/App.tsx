@@ -20,6 +20,7 @@ function App() {
   const [imageName, setImageName] = useState<string>()
   const [paletteSize, setPaletteSize] = useState(3)
   const [cleanNoise, setCleanNoise] = useState(true)
+  const [hasManualEdits, setHasManualEdits] = useState(false)
   const outputCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const canUndo = useEditorStore((state) => state.past.length > 0)
   const canRedo = useEditorStore((state) => state.future.length > 0)
@@ -30,7 +31,7 @@ function App() {
 
   // sourceImage 變更或元件卸載時，釋放 ImageBitmap 資源，避免記憶體洩漏
   useEffect(() => () => sourceImage?.close(), [sourceImage])
-  useEffect(() => clearHistory(), [sourceImage, canvasWidth, canvasHeight, pixelSize, paletteSize, cleanNoise, clearHistory])
+  useEffect(() => clearHistory(), [sourceImage, canvasWidth, canvasHeight, clearHistory])
 
   const handleImageSelect = async (file: File) => {
     const image = await createImageBitmap(file)
@@ -39,6 +40,7 @@ function App() {
     const fittedHeight = Math.max(4, Math.min(256, Math.round((image.height * fitScale) / 4) * 4))
 
     setSourceImage(image)
+    setHasManualEdits(false)
     setImageName(file.name)
     setCanvasWidth(fittedWidth)
     setCanvasHeight(fittedHeight)
@@ -51,6 +53,7 @@ function App() {
   const handleEditStart = useCallback((canvas: HTMLCanvasElement) => {
     const snapshot = captureCanvasSnapshot(canvas)
     if (snapshot) record(snapshot)
+    setHasManualEdits(true)
   }, [record])
 
   const handleUndo = useCallback(() => {
@@ -91,7 +94,7 @@ function App() {
 
   const handleExport = () => {
     const canvas = outputCanvasRef.current
-    if (!canvas || !sourceImage) return
+    if (!canvas || (!sourceImage && !hasManualEdits)) return
 
     const baseName = imageName?.replace(/\.[^.]+$/, '') || 'pixel-art'
     void downloadCanvasAsPng(canvas, `${baseName}-pixel-art.png`)
@@ -103,7 +106,7 @@ function App() {
         imageName={imageName}
         onImageSelect={handleImageSelect}
         onExport={handleExport}
-        canExport={Boolean(sourceImage)}
+        canExport={Boolean(sourceImage || hasManualEdits)}
         onUndo={handleUndo}
         onRedo={handleRedo}
         canUndo={canUndo}
@@ -127,6 +130,7 @@ function App() {
           sourceImage={sourceImage}
           paletteSize={paletteSize}
           cleanNoise={cleanNoise}
+          hasManualEdits={hasManualEdits}
           onCanvasReady={handleCanvasReady}
           activeTool={activeTool}
           color={color}
@@ -142,8 +146,14 @@ function App() {
           zoom={zoom}
           paletteSize={paletteSize}
           cleanNoise={cleanNoise}
-          onCanvasWidthChange={setCanvasWidth}
-          onCanvasHeightChange={setCanvasHeight}
+          onCanvasWidthChange={(value) => {
+            setHasManualEdits(false)
+            setCanvasWidth(value)
+          }}
+          onCanvasHeightChange={(value) => {
+            setHasManualEdits(false)
+            setCanvasHeight(value)
+          }}
           onGridChange={setShowGrid}
           onPixelSizeChange={setPixelSize}
           onZoomChange={setZoom}

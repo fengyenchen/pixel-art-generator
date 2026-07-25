@@ -2,8 +2,8 @@ import type { PixelCanvasProps } from '../../types/canvas'
 import { usePixelate } from '../../hooks/usePixelate'
 import { useCanvasDraw } from '../../hooks/useCanvasDraw'
 
-export default function PixelCanvas({ width, height, pixelSize, showGrid, zoom, sourceImage, paletteSize, cleanNoise, onCanvasReady, activeTool, color, onColorChange, onEditStart }: PixelCanvasProps) {
-  const canvasRef = usePixelate({ sourceImage, width, height, pixelSize, paletteSize, cleanNoise })
+export default function PixelCanvas({ width, height, pixelSize, showGrid, zoom, sourceImage, paletteSize, cleanNoise, hasManualEdits, onCanvasReady, activeTool, color, onColorChange, onEditStart }: PixelCanvasProps) {
+  const canvasRef = usePixelate({ sourceImage, width, height, pixelSize, paletteSize, cleanNoise, hasManualEdits })
   const pointerHandlers = useCanvasDraw({ canvasRef, activeTool, color, pixelSize, onColorChange, onEditStart })
   const scale = zoom / 100
   const displayWidth = Math.max(1, width * scale)

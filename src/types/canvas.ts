@@ -12,6 +12,7 @@ export interface PixelCanvasProps {
   sourceImage: ImageBitmap | null
   paletteSize: number
   cleanNoise: boolean
+  hasManualEdits: boolean
   onCanvasReady: (canvas: HTMLCanvasElement | null) => void
   activeTool: EditorTool
   color: string
@@ -26,5 +27,6 @@ export interface UsePixelateOptions {
   pixelSize: number
   paletteSize: number
   cleanNoise: boolean
+  hasManualEdits: boolean
 }
 import type { EditorTool } from './editor'
