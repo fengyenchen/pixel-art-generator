@@ -8,6 +8,7 @@ export interface ControlPanelProps {
   cleanNoise: boolean
   onCanvasWidthChange: (value: number) => void
   onCanvasHeightChange: (value: number) => void
+  onCanvasSizeChange: (width: number, height: number) => void
   onPixelSizeChange: (value: number) => void
   onGridChange: (value: boolean) => void
   onZoomChange: (value: number) => void

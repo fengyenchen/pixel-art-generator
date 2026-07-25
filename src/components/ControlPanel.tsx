@@ -22,7 +22,7 @@ function RangeRow({ label, value, min, max, step = 1, suffix = '', onChange }: R
   )
 }
 
-export default function ControlPanel({ canvasWidth, canvasHeight, pixelSize, zoom, showGrid, paletteSize, cleanNoise, onCanvasWidthChange, onCanvasHeightChange, onPixelSizeChange, onZoomChange, onGridChange, onPaletteSizeChange, onCleanNoiseChange }: ControlPanelProps) {
+export default function ControlPanel({ canvasWidth, canvasHeight, pixelSize, zoom, showGrid, paletteSize, cleanNoise, onCanvasWidthChange, onCanvasHeightChange, onCanvasSizeChange, onPixelSizeChange, onZoomChange, onGridChange, onPaletteSizeChange, onCleanNoiseChange }: ControlPanelProps) {
   return (
     <aside className="col-span-2 w-full rounded-2xl border border-border bg-card text-card-foreground shadow-sm xl:col-span-1 xl:w-72">
       <div className="flex items-center gap-2 border-b border-border-subtle px-5 py-4">
@@ -41,10 +41,7 @@ export default function ControlPanel({ canvasWidth, canvasHeight, pixelSize, zoo
                 <button
                   key={size}
                   type="button"
-                  onClick={() => {
-                    onCanvasWidthChange(size)
-                    onCanvasHeightChange(size)
-                  }}
+                  onClick={() => onCanvasSizeChange(size, size)}
                   className={`rounded-md border px-1 py-1 text-[10px] font-medium transition ${
                     isActive
                       ? 'border-primary bg-primary text-primary-foreground'

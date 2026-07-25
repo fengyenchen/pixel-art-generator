@@ -12,7 +12,8 @@ export function captureCanvasSnapshot(canvas: HTMLCanvasElement): CanvasSnapshot
 }
 
 export function restoreCanvasSnapshot(canvas: HTMLCanvasElement, snapshot: CanvasSnapshot) {
-  if (canvas.width !== snapshot.width || canvas.height !== snapshot.height) return false
+  if (canvas.width !== snapshot.width) canvas.width = snapshot.width
+  if (canvas.height !== snapshot.height) canvas.height = snapshot.height
 
   const context = canvas.getContext('2d')
   if (!context) return false

@@ -31,7 +31,7 @@ function App() {
 
   // sourceImage 變更或元件卸載時，釋放 ImageBitmap 資源，避免記憶體洩漏
   useEffect(() => () => sourceImage?.close(), [sourceImage])
-  useEffect(() => clearHistory(), [sourceImage, canvasWidth, canvasHeight, clearHistory])
+  useEffect(() => clearHistory(), [sourceImage, clearHistory])
 
   const handleImageSelect = async (file: File) => {
     const image = await createImageBitmap(file)
@@ -56,13 +56,29 @@ function App() {
     setHasManualEdits(true)
   }, [record])
 
+  const handleCanvasSizeChange = useCallback((width: number, height: number) => {
+    if (width === canvasWidth && height === canvasHeight) return
+
+    const canvas = outputCanvasRef.current
+    if (canvas) {
+      const snapshot = captureCanvasSnapshot(canvas)
+      if (snapshot) record(snapshot)
+    }
+
+    setCanvasWidth(width)
+    setCanvasHeight(height)
+  }, [canvasWidth, canvasHeight, record])
+
   const handleUndo = useCallback(() => {
     const canvas = outputCanvasRef.current
     if (!canvas) return
     const current = captureCanvasSnapshot(canvas)
     if (!current) return
     const previous = undo(current)
-    if (previous) restoreCanvasSnapshot(canvas, previous)
+    if (previous && restoreCanvasSnapshot(canvas, previous)) {
+      setCanvasWidth(previous.width)
+      setCanvasHeight(previous.height)
+    }
   }, [undo])
 
   const handleRedo = useCallback(() => {
@@ -71,7 +87,10 @@ function App() {
     const current = captureCanvasSnapshot(canvas)
     if (!current) return
     const next = redo(current)
-    if (next) restoreCanvasSnapshot(canvas, next)
+    if (next && restoreCanvasSnapshot(canvas, next)) {
+      setCanvasWidth(next.width)
+      setCanvasHeight(next.height)
+    }
   }, [redo])
 
   const handleClearCanvas = useCallback(() => {
@@ -158,12 +177,9 @@ function App() {
           zoom={zoom}
           paletteSize={paletteSize}
           cleanNoise={cleanNoise}
-          onCanvasWidthChange={(value) => {
-            setCanvasWidth(value)
-          }}
-          onCanvasHeightChange={(value) => {
-            setCanvasHeight(value)
-          }}
+          onCanvasWidthChange={(value) => handleCanvasSizeChange(value, canvasHeight)}
+          onCanvasHeightChange={(value) => handleCanvasSizeChange(canvasWidth, value)}
+          onCanvasSizeChange={handleCanvasSizeChange}
           onGridChange={setShowGrid}
           onPixelSizeChange={setPixelSize}
           onZoomChange={setZoom}
