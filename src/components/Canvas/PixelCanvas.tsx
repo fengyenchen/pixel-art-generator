@@ -5,7 +5,7 @@ import type { PixelCanvasProps } from '../../types/canvas'
 import { usePixelate } from '../../hooks/usePixelate'
 import { useCanvasDraw } from '../../hooks/useCanvasDraw'
 
-export default function PixelCanvas({ width, height, pixelSize, showGrid, zoom, sourceImage, paletteSize, cleanNoise, hasManualEdits, onCanvasReady, activeTool, color, onColorChange, onEditStart, onImageSelect }: PixelCanvasProps) {
+export default function PixelCanvas({ width, height, pixelSize, showGrid, zoom, sourceImage, paletteSize, cleanNoise, hasManualEdits, onCanvasReady, activeTool, color, onColorChange, onEditStart, onImageSelect, onProjectLoad }: PixelCanvasProps) {
   const [isDraggingImage, setIsDraggingImage] = useState(false)
   const canvasRef = usePixelate({ sourceImage, width, height, pixelSize, paletteSize, cleanNoise, hasManualEdits })
   const pointerHandlers = useCanvasDraw({ canvasRef, activeTool, color, pixelSize, onColorChange, onEditStart })
@@ -23,7 +23,13 @@ export default function PixelCanvas({ width, height, pixelSize, showGrid, zoom, 
     event.preventDefault()
     setIsDraggingImage(false)
     const file = event.dataTransfer.files[0]
-    if (file?.type.startsWith('image/')) void onImageSelect(file)
+    if (!file) return
+
+    if (file.name.toLowerCase().endsWith('.json') || file.type === 'application/json') {
+      void onProjectLoad(file)
+    } else if (file.type.startsWith('image/')) {
+      void onImageSelect(file)
+    }
   }
 
   return (
@@ -100,7 +106,7 @@ export default function PixelCanvas({ width, height, pixelSize, showGrid, zoom, 
         <div className="pointer-events-none absolute inset-0 z-20 grid place-items-center bg-card/50 p-6">
           <div className="rounded-2xl border-2 border-dashed border-primary bg-secondary px-10 py-8 text-center shadow-lg">
             <Upload size={30} className="mx-auto mb-3 text-muted-foreground" />
-            <p className="text-sm font-bold text-secondary-foreground">放開以匯入圖片</p>
+            <p className="text-sm font-bold text-secondary-foreground">放開以匯入圖片或專案</p>
           </div>
         </div>
       )}

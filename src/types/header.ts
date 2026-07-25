@@ -8,4 +8,6 @@ export interface HeaderProps {
   canUndo: boolean
   canRedo: boolean
   onOpenHelp: () => void
+  onSaveProject: () => void
+  onLoadProject: (file: File) => Promise<void>
 }

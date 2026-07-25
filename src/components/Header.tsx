@@ -1,13 +1,19 @@
-import { Blocks, Undo2, Redo2, ImagePlus, Download, CircleHelp } from 'lucide-react'
+import { Blocks, Undo2, Redo2, ImagePlus, Download, CircleHelp, FolderOpen, Save } from 'lucide-react'
 import type { ChangeEvent } from 'react'
 import type { HeaderProps } from '../types/header'
 
 const iconButton = 'grid size-9 place-items-center rounded-lg text-muted-foreground transition hover:bg-accent hover:text-accent-foreground disabled:opacity-40'
 
-export default function Header({ imageName, onImageSelect, onExport, canExport, onUndo, onRedo, canUndo, canRedo, onOpenHelp }: HeaderProps) {
+export default function Header({ imageName, onImageSelect, onExport, canExport, onUndo, onRedo, canUndo, canRedo, onOpenHelp, onSaveProject, onLoadProject }: HeaderProps) {
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) void onImageSelect(file)
+    event.target.value = ''
+  }
+
+  const handleProjectChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (file) void onLoadProject(file)
     event.target.value = ''
   }
 
@@ -25,6 +31,11 @@ export default function Header({ imageName, onImageSelect, onExport, canExport, 
 
       <div className="flex items-center gap-1">
         <button type="button" className={iconButton} title="使用說明" onClick={onOpenHelp}><CircleHelp size={18} /></button>
+        <button type="button" className={iconButton} title="儲存專案" onClick={onSaveProject}><Save size={18} /></button>
+        <label className={`${iconButton} cursor-pointer`} title="載入專案">
+          <FolderOpen size={18} />
+          <input type="file" accept=".json,application/json" onChange={handleProjectChange} className="sr-only" />
+        </label>
         <button type="button" className={iconButton} title="復原 (Ctrl+Z)" onClick={onUndo} disabled={!canUndo}><Undo2 size={18} /></button>
         <button type="button" className={iconButton} title="重做 (Ctrl+Y)" onClick={onRedo} disabled={!canRedo}><Redo2 size={18} /></button>
         <div className="mx-2 hidden h-6 w-px bg-border sm:block" />

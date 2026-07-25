@@ -8,6 +8,7 @@ import type { EditorTool } from './types/editor'
 import { downloadCanvasAsPng } from './utils/exportHelpers'
 import { captureCanvasSnapshot, restoreCanvasSnapshot } from './utils/canvasHelpers'
 import { useEditorStore } from './store/useEditorStore'
+import { downloadProject, projectPixelsToImage, readProject } from './utils/projectHelpers'
 
 function App() {
   const [activeTool, setActiveTool] = useState<EditorTool>('pencil')
@@ -23,6 +24,8 @@ function App() {
   const [cleanNoise, setCleanNoise] = useState(true)
   const [hasManualEdits, setHasManualEdits] = useState(false)
   const [isHelpOpen, setIsHelpOpen] = useState(false)
+  const [pendingProjectImage, setPendingProjectImage] = useState<ImageBitmap | null>(null)
+  const [projectError, setProjectError] = useState<string>()
   const outputCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const canUndo = useEditorStore((state) => state.past.length > 0)
   const canRedo = useEditorStore((state) => state.future.length > 0)
@@ -34,6 +37,19 @@ function App() {
   // sourceImage 變更或元件卸載時，釋放 ImageBitmap 資源，避免記憶體洩漏
   useEffect(() => () => sourceImage?.close(), [sourceImage])
   useEffect(() => clearHistory(), [sourceImage, clearHistory])
+
+  useEffect(() => {
+    const canvas = outputCanvasRef.current
+    if (!canvas || !pendingProjectImage || canvas.width !== canvasWidth || canvas.height !== canvasHeight) return
+
+    const context = canvas.getContext('2d')
+    if (!context) return
+    context.clearRect(0, 0, canvas.width, canvas.height)
+    context.drawImage(pendingProjectImage, 0, 0)
+    pendingProjectImage.close()
+    setPendingProjectImage(null)
+    clearHistory()
+  }, [pendingProjectImage, canvasWidth, canvasHeight, clearHistory])
 
   const handleImageSelect = async (file: File) => {
     const image = await createImageBitmap(file)
@@ -132,6 +148,44 @@ function App() {
     void downloadCanvasAsPng(canvas, `${baseName}-pixel-art.png`)
   }
 
+  const handleSaveProject = () => {
+    const canvas = outputCanvasRef.current
+    if (!canvas) return
+
+    const baseName = imageName?.replace(/\.[^.]+$/, '').replace(/\.pixel-art$/, '') || 'untitled'
+    downloadProject(canvas, {
+      pixelSize,
+      paletteSize,
+      zoom,
+      showGrid,
+      cleanNoise,
+      color,
+    }, `${baseName}.pixel-art.json`)
+  }
+
+  const handleLoadProject = async (file: File) => {
+    try {
+      const project = await readProject(file)
+      const image = await projectPixelsToImage(project.canvas.pixelData)
+
+      setProjectError(undefined)
+      setSourceImage(null)
+      setHasManualEdits(true)
+      setPendingProjectImage(image)
+      setImageName(file.name)
+      setCanvasWidth(project.canvas.width)
+      setCanvasHeight(project.canvas.height)
+      setPixelSize(project.settings.pixelSize)
+      setPaletteSize(project.settings.paletteSize)
+      setZoom(project.settings.zoom)
+      setShowGrid(project.settings.showGrid)
+      setCleanNoise(project.settings.cleanNoise)
+      setColor(project.settings.color)
+    } catch (error) {
+      setProjectError(error instanceof Error ? error.message : '無法載入專案檔案')
+    }
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <Header
@@ -144,6 +198,8 @@ function App() {
         canUndo={canUndo}
         canRedo={canRedo}
         onOpenHelp={() => setIsHelpOpen(true)}
+        onSaveProject={handleSaveProject}
+        onLoadProject={handleLoadProject}
       />
 
       <main className="mx-auto grid w-full flex-1 grid-cols-[auto_minmax(0,1fr)] items-start gap-4 p-4 xl:grid-cols-[auto_minmax(0,1fr)_auto] xl:gap-5 xl:p-5">
@@ -171,6 +227,7 @@ function App() {
           onColorChange={setColor}
           onEditStart={handleEditStart}
           onImageSelect={handleImageSelect}
+          onProjectLoad={handleLoadProject}
         />
 
         <ControlPanel
@@ -193,6 +250,17 @@ function App() {
       </main>
 
       {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} />}
+
+      {projectError && (
+        <button
+          type="button"
+          onClick={() => setProjectError(undefined)}
+          className="fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-secondary-foreground shadow-lg"
+          title="點擊關閉"
+        >
+          {projectError}
+        </button>
+      )}
 
     </div>
   )

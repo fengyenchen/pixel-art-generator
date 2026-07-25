@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Download, ImagePlus, Keyboard, MousePointer2, SlidersHorizontal, X } from 'lucide-react'
+import { Download, FolderOpen, ImagePlus, Keyboard, MousePointer2, SlidersHorizontal, X } from 'lucide-react'
 import type { HelpModalProps } from '../types/helpModal'
 
 const guides = [
@@ -22,6 +22,11 @@ const guides = [
     icon: Keyboard,
     title: '復原與重做',
     description: '使用頂部按鈕，或按 Ctrl + Z 復原、Ctrl + Y 重做。畫布尺寸與清空操作也能復原。',
+  },
+  {
+    icon: FolderOpen,
+    title: '儲存與載入專案',
+    description: '使用頂部的儲存圖示下載 .pixel-art.json；之後可用資料夾圖示或直接拖放到畫布載入，恢復內容、尺寸與設定。',
   },
   {
     icon: Download,
