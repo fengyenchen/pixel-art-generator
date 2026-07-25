@@ -12,4 +12,5 @@ export interface ToolbarProps {
   color: string
   onToolChange: (tool: EditorTool) => void
   onColorChange: (color: string) => void
+  onClear: () => void
 }

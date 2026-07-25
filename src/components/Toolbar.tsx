@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MousePointer2, Pencil, Eraser, PaintBucket, Pipette } from 'lucide-react'
+import { MousePointer2, Pencil, Eraser, PaintBucket, Pipette, Trash2 } from 'lucide-react'
 import type { ToolOption, ToolbarProps } from '../types/toolbar'
 import { SketchPicker } from 'react-color';
 
@@ -11,7 +11,7 @@ const tools: ToolOption[] = [
     { id: 'eyedropper', label: '吸管', icon: Pipette },
 ]
 
-export default function Toolbar({ activeTool, color, onToolChange, onColorChange }: ToolbarProps) {
+export default function Toolbar({ activeTool, color, onToolChange, onColorChange, onClear }: ToolbarProps) {
     const [isColorPickerOpen, setIsColorPickerOpen] = useState(false)
 
     return (
@@ -61,6 +61,16 @@ export default function Toolbar({ activeTool, color, onToolChange, onColorChange
                     </div>
                 )}
             </div>
+
+            <button
+                type="button"
+                onClick={onClear}
+                className="mt-3 grid size-10 place-items-center rounded-xl text-muted-foreground transition hover:bg-secondary hover:text-secondary-foreground"
+                title="清空畫布"
+                aria-label="清空畫布"
+            >
+                <Trash2 size={19} strokeWidth={2} />
+            </button>
         </aside>
     )
 }

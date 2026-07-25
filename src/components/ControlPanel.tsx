@@ -59,7 +59,7 @@ export default function ControlPanel({ canvasWidth, canvasHeight, pixelSize, zoo
           <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2">
             <label className="text-xs text-subtle-foreground">
               寬度
-              <select value={canvasWidth} onChange={(event) => onCanvasWidthChange(Number(event.target.value))} className="mt-1 w-full rounded-lg border border-input bg-card px-2.5 py-2 text-sm text-secondary-foreground outline-none transition focus:border-ring">
+              <select value={canvasWidth} onChange={(event) => onCanvasWidthChange(Number(event.target.value))} className="mt-1 w-full rounded-lg border border-input bg-card px-2.5 py-2 text-sm text-secondary-foreground outline-none transition">
                 {canvasDimensions.map((dimension) => (
                   <option key={dimension} value={dimension}>{dimension} px</option>
                 ))}
@@ -68,7 +68,7 @@ export default function ControlPanel({ canvasWidth, canvasHeight, pixelSize, zoo
             <span className="pb-2 text-sm text-subtle-foreground">×</span>
             <label className="text-xs text-subtle-foreground">
               高度
-              <select value={canvasHeight} onChange={(event) => onCanvasHeightChange(Number(event.target.value))} className="mt-1 w-full rounded-lg border border-input bg-card px-2.5 py-2 text-sm text-secondary-foreground outline-none transition focus:border-ring">
+              <select value={canvasHeight} onChange={(event) => onCanvasHeightChange(Number(event.target.value))} className="mt-1 w-full rounded-lg border border-input bg-card px-2.5 py-2 text-sm text-secondary-foreground outline-none transition">
                 {canvasDimensions.map((dimension) => (
                   <option key={dimension} value={dimension}>{dimension} px</option>
                 ))}

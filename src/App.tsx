@@ -74,6 +74,17 @@ function App() {
     if (next) restoreCanvasSnapshot(canvas, next)
   }, [redo])
 
+  const handleClearCanvas = useCallback(() => {
+    const canvas = outputCanvasRef.current
+    const context = canvas?.getContext('2d')
+    if (!canvas || !context) return
+
+    const snapshot = captureCanvasSnapshot(canvas)
+    if (snapshot) record(snapshot)
+    context.clearRect(0, 0, canvas.width, canvas.height)
+    setHasManualEdits(true)
+  }, [record])
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!(event.ctrlKey || event.metaKey)) return
@@ -119,6 +130,7 @@ function App() {
           color={color}
           onColorChange={setColor}
           onToolChange={setActiveTool}
+          onClear={handleClearCanvas}
         />
 
         <PixelCanvas
