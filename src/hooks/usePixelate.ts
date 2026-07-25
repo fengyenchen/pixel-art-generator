@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import type { UsePixelateOptions } from '../types/canvas'
 import { drawPixelatedImage } from '../utils/pixelate'
 
-export function usePixelate({ sourceImage, width, height, pixelSize }: UsePixelateOptions) {
+export function usePixelate({ sourceImage, width, height, pixelSize, paletteSize, cleanNoise }: UsePixelateOptions) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
@@ -19,9 +19,9 @@ export function usePixelate({ sourceImage, width, height, pixelSize }: UsePixela
     context.clearRect(0, 0, width, height)
 
     if (sourceImage) {
-      drawPixelatedImage(sourceImage, canvas, width, height, pixelSize)
+      drawPixelatedImage(sourceImage, canvas, width, height, pixelSize, { paletteSize, cleanNoise })
     }
-  }, [sourceImage, width, height, pixelSize])
+  }, [sourceImage, width, height, pixelSize, paletteSize, cleanNoise])
 
   return canvasRef
 }

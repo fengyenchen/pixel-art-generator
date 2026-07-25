@@ -7,14 +7,16 @@ import type { EditorTool } from './types/editor'
 
 function App() {
   const [activeTool, setActiveTool] = useState<EditorTool>('pencil')
-  const [canvasWidth, setCanvasWidth] = useState(64)
-  const [canvasHeight, setCanvasHeight] = useState(64)
+  const [canvasWidth, setCanvasWidth] = useState(256)
+  const [canvasHeight, setCanvasHeight] = useState(256)
   const [showGrid, setShowGrid] = useState(true)
   const [pixelSize, setPixelSize] = useState(8)
-  const [zoom, setZoom] = useState(800)
+  const [zoom, setZoom] = useState(200)
   const [color, setColor] = useState('#52525b')
   const [sourceImage, setSourceImage] = useState<ImageBitmap | null>(null)
   const [imageName, setImageName] = useState<string>()
+  const [paletteSize, setPaletteSize] = useState(3)
+  const [cleanNoise, setCleanNoise] = useState(true)
 
   // sourceImage 變更或元件卸載時，釋放 ImageBitmap 資源，避免記憶體洩漏
   useEffect(() => () => sourceImage?.close(), [sourceImage])
@@ -50,6 +52,8 @@ function App() {
           showGrid={showGrid}
           zoom={zoom}
           sourceImage={sourceImage}
+          paletteSize={paletteSize}
+          cleanNoise={cleanNoise}
         />
 
         <ControlPanel
@@ -58,11 +62,15 @@ function App() {
           pixelSize={pixelSize}
           showGrid={showGrid}
           zoom={zoom}
+          paletteSize={paletteSize}
+          cleanNoise={cleanNoise}
           onCanvasWidthChange={setCanvasWidth}
           onCanvasHeightChange={setCanvasHeight}
           onGridChange={setShowGrid}
           onPixelSizeChange={setPixelSize}
           onZoomChange={setZoom}
+          onPaletteSizeChange={setPaletteSize}
+          onCleanNoiseChange={setCleanNoise}
         />
       </main>
     </div>

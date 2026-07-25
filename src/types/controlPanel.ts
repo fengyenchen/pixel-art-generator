@@ -4,11 +4,15 @@ export interface ControlPanelProps {
   pixelSize: number
   showGrid: boolean
   zoom: number
+  paletteSize: number
+  cleanNoise: boolean
   onCanvasWidthChange: (value: number) => void
   onCanvasHeightChange: (value: number) => void
   onPixelSizeChange: (value: number) => void
   onGridChange: (value: boolean) => void
   onZoomChange: (value: number) => void
+  onPaletteSizeChange: (value: number) => void
+  onCleanNoiseChange: (value: boolean) => void
 }
 
 export interface RangeRowProps {

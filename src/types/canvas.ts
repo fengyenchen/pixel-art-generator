@@ -10,6 +10,8 @@ export interface PixelCanvasProps {
   showGrid: boolean
   zoom: number
   sourceImage: ImageBitmap | null
+  paletteSize: number
+  cleanNoise: boolean
 }
 
 export interface UsePixelateOptions {
@@ -17,4 +19,6 @@ export interface UsePixelateOptions {
   width: number
   height: number
   pixelSize: number
+  paletteSize: number
+  cleanNoise: boolean
 }

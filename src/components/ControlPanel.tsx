@@ -22,7 +22,7 @@ function RangeRow({ label, value, min, max, step = 1, suffix = '', onChange }: R
   )
 }
 
-export default function ControlPanel({ canvasWidth, canvasHeight, pixelSize, zoom, showGrid, onCanvasWidthChange, onCanvasHeightChange, onPixelSizeChange, onZoomChange, onGridChange }: ControlPanelProps) {
+export default function ControlPanel({ canvasWidth, canvasHeight, pixelSize, zoom, showGrid, paletteSize, cleanNoise, onCanvasWidthChange, onCanvasHeightChange, onPixelSizeChange, onZoomChange, onGridChange, onPaletteSizeChange, onCleanNoiseChange }: ControlPanelProps) {
   return (
     <aside className="col-span-2 w-full rounded-2xl border border-border bg-card text-card-foreground shadow-sm xl:col-span-1 xl:w-72">
       <div className="flex items-center gap-2 border-b border-border-subtle px-5 py-4">
@@ -79,6 +79,7 @@ export default function ControlPanel({ canvasWidth, canvasHeight, pixelSize, zoo
 
         <section className="space-y-5">
           <RangeRow label="像素區塊" value={pixelSize} min={4} max={32} step={4} suffix=" px" onChange={onPixelSizeChange} />
+          <RangeRow label="色彩數量" value={paletteSize} min={2} max={64} step={1} suffix=" 色" onChange={onPaletteSizeChange} />
           <RangeRow label="縮放比例" value={zoom} min={100} max={1600} step={25} suffix="%" onChange={onZoomChange} />
         </section>
 
@@ -87,6 +88,10 @@ export default function ControlPanel({ canvasWidth, canvasHeight, pixelSize, zoo
         <label className="flex cursor-pointer items-center justify-between">
           <span className="flex items-center gap-2 text-sm font-medium text-secondary-foreground"><Grid3X3 size={16} /> 顯示網格</span>
           <input type="checkbox" checked={showGrid} onChange={(event) => onGridChange(event.target.checked)} className="size-4 accent-primary" />
+        </label>
+        <label className="flex cursor-pointer items-center justify-between">
+          <span className="text-sm font-medium text-secondary-foreground">整理孤立色塊</span>
+          <input type="checkbox" checked={cleanNoise} onChange={(event) => onCleanNoiseChange(event.target.checked)} className="size-4 accent-primary" />
         </label>
       </div>
     </aside>

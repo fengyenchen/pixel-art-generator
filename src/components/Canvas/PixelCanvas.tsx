@@ -1,8 +1,8 @@
 import type { PixelCanvasProps } from '../../types/canvas'
 import { usePixelate } from '../../hooks/usePixelate'
 
-export default function PixelCanvas({ width, height, pixelSize, showGrid, zoom, sourceImage }: PixelCanvasProps) {
-  const canvasRef = usePixelate({ sourceImage, width, height, pixelSize })
+export default function PixelCanvas({ width, height, pixelSize, showGrid, zoom, sourceImage, paletteSize, cleanNoise }: PixelCanvasProps) {
+  const canvasRef = usePixelate({ sourceImage, width, height, pixelSize, paletteSize, cleanNoise })
   const scale = zoom / 100
   const displayWidth = Math.max(1, width * scale)
   const displayHeight = Math.max(1, height * scale)
