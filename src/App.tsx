@@ -74,6 +74,9 @@ function App() {
           paletteSize={paletteSize}
           cleanNoise={cleanNoise}
           onCanvasReady={handleCanvasReady}
+          activeTool={activeTool}
+          color={color}
+          onColorChange={setColor}
         />
 
         <ControlPanel
