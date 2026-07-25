@@ -3,6 +3,7 @@ import Header from './components/Header'
 import Toolbar from './components/Toolbar'
 import PixelCanvas from './components/Canvas/PixelCanvas'
 import ControlPanel from './components/ControlPanel'
+import HelpModal from './components/HelpModal'
 import type { EditorTool } from './types/editor'
 import { downloadCanvasAsPng } from './utils/exportHelpers'
 import { captureCanvasSnapshot, restoreCanvasSnapshot } from './utils/canvasHelpers'
@@ -21,6 +22,7 @@ function App() {
   const [paletteSize, setPaletteSize] = useState(3)
   const [cleanNoise, setCleanNoise] = useState(true)
   const [hasManualEdits, setHasManualEdits] = useState(false)
+  const [isHelpOpen, setIsHelpOpen] = useState(false)
   const outputCanvasRef = useRef<HTMLCanvasElement | null>(null)
   const canUndo = useEditorStore((state) => state.past.length > 0)
   const canRedo = useEditorStore((state) => state.future.length > 0)
@@ -141,6 +143,7 @@ function App() {
         onRedo={handleRedo}
         canUndo={canUndo}
         canRedo={canRedo}
+        onOpenHelp={() => setIsHelpOpen(true)}
       />
 
       <main className="mx-auto grid w-full flex-1 grid-cols-[auto_minmax(0,1fr)] items-start gap-4 p-4 xl:grid-cols-[auto_minmax(0,1fr)_auto] xl:gap-5 xl:p-5">
@@ -188,6 +191,8 @@ function App() {
           onCleanNoiseChange={setCleanNoise}
         />
       </main>
+
+      {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} />}
 
     </div>
   )

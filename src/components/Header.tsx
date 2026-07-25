@@ -1,10 +1,10 @@
-import { Blocks, Undo2, Redo2, ImagePlus, Download } from 'lucide-react'
+import { Blocks, Undo2, Redo2, ImagePlus, Download, CircleHelp } from 'lucide-react'
 import type { ChangeEvent } from 'react'
 import type { HeaderProps } from '../types/header'
 
 const iconButton = 'grid size-9 place-items-center rounded-lg text-muted-foreground transition hover:bg-accent hover:text-accent-foreground disabled:opacity-40'
 
-export default function Header({ imageName, onImageSelect, onExport, canExport, onUndo, onRedo, canUndo, canRedo }: HeaderProps) {
+export default function Header({ imageName, onImageSelect, onExport, canExport, onUndo, onRedo, canUndo, canRedo, onOpenHelp }: HeaderProps) {
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) void onImageSelect(file)
@@ -24,6 +24,7 @@ export default function Header({ imageName, onImageSelect, onExport, canExport, 
       </div>
 
       <div className="flex items-center gap-1">
+        <button type="button" className={iconButton} title="使用說明" onClick={onOpenHelp}><CircleHelp size={18} /></button>
         <button type="button" className={iconButton} title="復原 (Ctrl+Z)" onClick={onUndo} disabled={!canUndo}><Undo2 size={18} /></button>
         <button type="button" className={iconButton} title="重做 (Ctrl+Y)" onClick={onRedo} disabled={!canRedo}><Redo2 size={18} /></button>
         <div className="mx-2 hidden h-6 w-px bg-border sm:block" />

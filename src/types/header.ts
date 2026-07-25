@@ -7,4 +7,5 @@ export interface HeaderProps {
   onRedo: () => void
   canUndo: boolean
   canRedo: boolean
+  onOpenHelp: () => void
 }
