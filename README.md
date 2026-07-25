@@ -2,6 +2,8 @@
 
 一個以 React、TypeScript 與原生 Canvas API 製作的像素繪圖及圖片轉換工具。所有影像處理都在瀏覽器端完成，不會將圖片上傳到伺服器。
 
+![Pixel Art Generator 操作介面](./public/1.png)
+
 ## 功能特色
 
 - 將圖片拖放至畫布，或透過檔案選擇器匯入
