@@ -61,8 +61,8 @@ export default function PixelCanvas({ width, height, pixelSize, showGrid, zoom, 
                 canvasRef.current = canvas
                 onCanvasReady(canvas)
               }}
-              className="absolute inset-0 w-full h-full"
-              style={{ imageRendering: 'pixelated' }}
+              className="absolute inset-0 h-full w-full touch-none select-none"
+              style={{ imageRendering: 'pixelated', touchAction: 'none' }}
               {...pointerHandlers}
             />
             {showGrid && (

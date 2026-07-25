@@ -144,6 +144,7 @@ export function useCanvasDraw({ canvasRef, activeTool, color, pixelSize, onColor
     },
     onPointerMove: (event) => {
       if (!isDrawingRef.current || (activeTool !== 'pencil' && activeTool !== 'eraser')) return
+      event.preventDefault()
       applyTool(event)
     },
     onPointerUp: finishDrawing,
