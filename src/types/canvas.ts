@@ -16,6 +16,7 @@ export interface PixelCanvasProps {
   activeTool: EditorTool
   color: string
   onColorChange: (color: string) => void
+  onEditStart: (canvas: HTMLCanvasElement) => void
 }
 
 export interface UsePixelateOptions {

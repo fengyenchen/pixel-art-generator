@@ -5,6 +5,8 @@ import PixelCanvas from './components/Canvas/PixelCanvas'
 import ControlPanel from './components/ControlPanel'
 import type { EditorTool } from './types/editor'
 import { downloadCanvasAsPng } from './utils/exportHelpers'
+import { captureCanvasSnapshot, restoreCanvasSnapshot } from './utils/canvasHelpers'
+import { useEditorStore } from './store/useEditorStore'
 
 function App() {
   const [activeTool, setActiveTool] = useState<EditorTool>('pencil')
@@ -19,9 +21,16 @@ function App() {
   const [paletteSize, setPaletteSize] = useState(3)
   const [cleanNoise, setCleanNoise] = useState(true)
   const outputCanvasRef = useRef<HTMLCanvasElement | null>(null)
+  const canUndo = useEditorStore((state) => state.past.length > 0)
+  const canRedo = useEditorStore((state) => state.future.length > 0)
+  const record = useEditorStore((state) => state.record)
+  const undo = useEditorStore((state) => state.undo)
+  const redo = useEditorStore((state) => state.redo)
+  const clearHistory = useEditorStore((state) => state.clearHistory)
 
   // sourceImage 變更或元件卸載時，釋放 ImageBitmap 資源，避免記憶體洩漏
   useEffect(() => () => sourceImage?.close(), [sourceImage])
+  useEffect(() => clearHistory(), [sourceImage, canvasWidth, canvasHeight, pixelSize, paletteSize, cleanNoise, clearHistory])
 
   const handleImageSelect = async (file: File) => {
     const image = await createImageBitmap(file)
@@ -39,6 +48,47 @@ function App() {
     outputCanvasRef.current = canvas
   }, [])
 
+  const handleEditStart = useCallback((canvas: HTMLCanvasElement) => {
+    const snapshot = captureCanvasSnapshot(canvas)
+    if (snapshot) record(snapshot)
+  }, [record])
+
+  const handleUndo = useCallback(() => {
+    const canvas = outputCanvasRef.current
+    if (!canvas) return
+    const current = captureCanvasSnapshot(canvas)
+    if (!current) return
+    const previous = undo(current)
+    if (previous) restoreCanvasSnapshot(canvas, previous)
+  }, [undo])
+
+  const handleRedo = useCallback(() => {
+    const canvas = outputCanvasRef.current
+    if (!canvas) return
+    const current = captureCanvasSnapshot(canvas)
+    if (!current) return
+    const next = redo(current)
+    if (next) restoreCanvasSnapshot(canvas, next)
+  }, [redo])
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey)) return
+
+      if (event.key.toLowerCase() === 'z') {
+        event.preventDefault()
+        if (event.shiftKey) handleRedo()
+        else handleUndo()
+      } else if (event.key.toLowerCase() === 'y') {
+        event.preventDefault()
+        handleRedo()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleUndo, handleRedo])
+
   const handleExport = () => {
     const canvas = outputCanvasRef.current
     if (!canvas || !sourceImage) return
@@ -54,6 +104,10 @@ function App() {
         onImageSelect={handleImageSelect}
         onExport={handleExport}
         canExport={Boolean(sourceImage)}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={canUndo}
+        canRedo={canRedo}
       />
 
       <main className="mx-auto grid w-full flex-1 grid-cols-[auto_minmax(0,1fr)] items-start gap-4 p-4 xl:grid-cols-[auto_minmax(0,1fr)_auto] xl:gap-5 xl:p-5">
@@ -77,6 +131,7 @@ function App() {
           activeTool={activeTool}
           color={color}
           onColorChange={setColor}
+          onEditStart={handleEditStart}
         />
 
         <ControlPanel

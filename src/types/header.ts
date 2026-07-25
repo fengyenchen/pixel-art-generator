@@ -3,4 +3,8 @@ export interface HeaderProps {
   onImageSelect: (file: File) => void
   onExport: () => void
   canExport: boolean
+  onUndo: () => void
+  onRedo: () => void
+  canUndo: boolean
+  canRedo: boolean
 }

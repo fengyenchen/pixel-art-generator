@@ -18,7 +18,7 @@ const rgbaMatches = (data: Uint8ClampedArray, index: number, color: number[]) =>
 
 const toHex = (value: number) => value.toString(16).padStart(2, '0')
 
-export function useCanvasDraw({ canvasRef, activeTool, color, pixelSize, onColorChange }: UseCanvasDrawOptions): CanvasPointerHandlers {
+export function useCanvasDraw({ canvasRef, activeTool, color, pixelSize, onColorChange, onEditStart }: UseCanvasDrawOptions): CanvasPointerHandlers {
   const isDrawingRef = useRef(false)
   const lastBlockRef = useRef<string | undefined>(undefined)
 
@@ -139,6 +139,7 @@ export function useCanvasDraw({ canvasRef, activeTool, color, pixelSize, onColor
       event.preventDefault()
       event.currentTarget.setPointerCapture(event.pointerId)
       isDrawingRef.current = true
+      if (activeTool !== 'eyedropper') onEditStart(event.currentTarget)
       applyTool(event)
     },
     onPointerMove: (event) => {

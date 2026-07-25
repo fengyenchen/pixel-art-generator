@@ -7,6 +7,7 @@ export interface UseCanvasDrawOptions {
   color: string
   pixelSize: number
   onColorChange: (color: string) => void
+  onEditStart: (canvas: HTMLCanvasElement) => void
 }
 
 export interface CanvasPointerHandlers {
