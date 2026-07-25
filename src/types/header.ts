@@ -1,6 +1,6 @@
 export interface HeaderProps {
   imageName?: string
-  onImageSelect: (file: File) => void
+  onImageSelect: (file: File) => Promise<void>
   onExport: () => void
   canExport: boolean
   onUndo: () => void

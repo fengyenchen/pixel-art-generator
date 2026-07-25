@@ -167,6 +167,7 @@ function App() {
           color={color}
           onColorChange={setColor}
           onEditStart={handleEditStart}
+          onImageSelect={handleImageSelect}
         />
 
         <ControlPanel
@@ -187,6 +188,7 @@ function App() {
           onCleanNoiseChange={setCleanNoise}
         />
       </main>
+
     </div>
   )
 }

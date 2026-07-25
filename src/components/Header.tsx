@@ -7,7 +7,7 @@ const iconButton = 'grid size-9 place-items-center rounded-lg text-muted-foregro
 export default function Header({ imageName, onImageSelect, onExport, canExport, onUndo, onRedo, canUndo, canRedo }: HeaderProps) {
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (file) onImageSelect(file)
+    if (file) void onImageSelect(file)
     event.target.value = ''
   }
 

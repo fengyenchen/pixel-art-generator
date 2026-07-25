@@ -18,6 +18,7 @@ export interface PixelCanvasProps {
   color: string
   onColorChange: (color: string) => void
   onEditStart: (canvas: HTMLCanvasElement) => void
+  onImageSelect: (file: File) => Promise<void>
 }
 
 export interface UsePixelateOptions {
