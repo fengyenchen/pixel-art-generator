@@ -27,7 +27,7 @@ export default function Header({ imageName, onImageSelect, onExport, canExport }
         <button className={iconButton} title="復原" disabled><Undo2 size={18} /></button>
         <button className={iconButton} title="重做" disabled><Redo2 size={18} /></button>
         <div className="mx-2 hidden h-6 w-px bg-border sm:block" />
-        <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-secondary-foreground shadow-sm transition hover:bg-accent">
+        <label className="flex h-9 w-9 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-card px-0 text-md font-medium text-secondary-foreground shadow-sm transition hover:bg-accent sm:w-30 sm:px-3">
           <ImagePlus size={16} /> <span className="hidden sm:inline">匯入圖片</span>
           <input type="file" accept="image/*" onChange={handleImageChange} className="sr-only" />
         </label>
@@ -35,7 +35,7 @@ export default function Header({ imageName, onImageSelect, onExport, canExport }
           type="button"
           onClick={onExport}
           disabled={!canExport}
-          className="ml-1 flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-sm shadow-primary/20 transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
+          className="ml-1 flex h-9 w-9 items-center justify-center gap-2 rounded-lg border border-primary bg-primary px-0 text-sm font-medium text-primary-foreground shadow-sm shadow-primary/20 transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40 sm:w-32.5 sm:px-3"
         >
           <Download size={16} /> <span className="hidden sm:inline">匯出 PNG</span>
         </button>

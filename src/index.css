@@ -80,12 +80,6 @@ button {
   background-size: 20px 20px;
 }
 
-.pixel-grid {
-  background-image:
-    linear-gradient(to right, var(--canvas-grid) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--canvas-grid) 1px, transparent 1px);
-}
-
 @media (max-width: 640px) {
   .canvas-workspace {
     padding: 1rem;
