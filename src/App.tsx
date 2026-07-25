@@ -159,11 +159,9 @@ function App() {
           paletteSize={paletteSize}
           cleanNoise={cleanNoise}
           onCanvasWidthChange={(value) => {
-            setHasManualEdits(false)
             setCanvasWidth(value)
           }}
           onCanvasHeightChange={(value) => {
-            setHasManualEdits(false)
             setCanvasHeight(value)
           }}
           onGridChange={setShowGrid}

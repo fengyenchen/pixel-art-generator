@@ -4,12 +4,19 @@ import { drawPixelatedImage } from '../utils/pixelate'
 
 export function usePixelate({ sourceImage, width, height, pixelSize, paletteSize, cleanNoise, hasManualEdits }: UsePixelateOptions) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const settingsRef = useRef({ pixelSize, paletteSize, cleanNoise })
-  settingsRef.current = { pixelSize, paletteSize, cleanNoise }
+  const settingsRef = useRef({ pixelSize, paletteSize, cleanNoise, hasManualEdits })
+  settingsRef.current = { pixelSize, paletteSize, cleanNoise, hasManualEdits }
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
+
+    const settings = settingsRef.current
+    const previousCanvas = document.createElement('canvas')
+    previousCanvas.width = canvas.width
+    previousCanvas.height = canvas.height
+    const previousContext = previousCanvas.getContext('2d')
+    if (settings.hasManualEdits) previousContext?.drawImage(canvas, 0, 0)
 
     canvas.width = width
     canvas.height = height
@@ -20,8 +27,11 @@ export function usePixelate({ sourceImage, width, height, pixelSize, paletteSize
     context.imageSmoothingEnabled = false
     context.clearRect(0, 0, width, height)
 
-    if (sourceImage) {
-      const settings = settingsRef.current
+    if (settings.hasManualEdits && previousContext) {
+      const offsetX = Math.round((width - previousCanvas.width) / 2 / settings.pixelSize) * settings.pixelSize
+      const offsetY = Math.round((height - previousCanvas.height) / 2 / settings.pixelSize) * settings.pixelSize
+      context.drawImage(previousCanvas, offsetX, offsetY)
+    } else if (sourceImage) {
       drawPixelatedImage(sourceImage, canvas, width, height, settings.pixelSize, settings)
     }
   }, [sourceImage, width, height])
