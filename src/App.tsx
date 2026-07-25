@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Header from './components/Header'
 import Toolbar from './components/Toolbar'
 import PixelCanvas from './components/Canvas/PixelCanvas'
 import ControlPanel from './components/ControlPanel'
 import type { EditorTool } from './types/editor'
+import { downloadCanvasAsPng } from './utils/exportHelpers'
 
 function App() {
   const [activeTool, setActiveTool] = useState<EditorTool>('pencil')
@@ -17,6 +18,7 @@ function App() {
   const [imageName, setImageName] = useState<string>()
   const [paletteSize, setPaletteSize] = useState(3)
   const [cleanNoise, setCleanNoise] = useState(true)
+  const outputCanvasRef = useRef<HTMLCanvasElement | null>(null)
 
   // sourceImage 變更或元件卸載時，釋放 ImageBitmap 資源，避免記憶體洩漏
   useEffect(() => () => sourceImage?.close(), [sourceImage])
@@ -33,9 +35,26 @@ function App() {
     setCanvasHeight(fittedHeight)
   }
 
+  const handleCanvasReady = useCallback((canvas: HTMLCanvasElement | null) => {
+    outputCanvasRef.current = canvas
+  }, [])
+
+  const handleExport = () => {
+    const canvas = outputCanvasRef.current
+    if (!canvas || !sourceImage) return
+
+    const baseName = imageName?.replace(/\.[^.]+$/, '') || 'pixel-art'
+    void downloadCanvasAsPng(canvas, `${baseName}-pixel-art.png`)
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      <Header imageName={imageName} onImageSelect={handleImageSelect} />
+      <Header
+        imageName={imageName}
+        onImageSelect={handleImageSelect}
+        onExport={handleExport}
+        canExport={Boolean(sourceImage)}
+      />
 
       <main className="mx-auto grid w-full flex-1 grid-cols-[auto_minmax(0,1fr)] items-start gap-4 p-4 xl:grid-cols-[auto_minmax(0,1fr)_auto] xl:gap-5 xl:p-5">
         <Toolbar
@@ -54,6 +73,7 @@ function App() {
           sourceImage={sourceImage}
           paletteSize={paletteSize}
           cleanNoise={cleanNoise}
+          onCanvasReady={handleCanvasReady}
         />
 
         <ControlPanel

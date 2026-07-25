@@ -12,6 +12,7 @@ export interface PixelCanvasProps {
   sourceImage: ImageBitmap | null
   paletteSize: number
   cleanNoise: boolean
+  onCanvasReady: (canvas: HTMLCanvasElement | null) => void
 }
 
 export interface UsePixelateOptions {

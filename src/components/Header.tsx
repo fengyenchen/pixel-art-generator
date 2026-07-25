@@ -4,7 +4,7 @@ import type { HeaderProps } from '../types/header'
 
 const iconButton = 'grid size-9 place-items-center rounded-lg text-muted-foreground transition hover:bg-accent hover:text-accent-foreground disabled:opacity-40'
 
-export default function Header({ imageName, onImageSelect }: HeaderProps) {
+export default function Header({ imageName, onImageSelect, onExport, canExport }: HeaderProps) {
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) onImageSelect(file)
@@ -31,7 +31,12 @@ export default function Header({ imageName, onImageSelect }: HeaderProps) {
           <ImagePlus size={16} /> <span className="hidden sm:inline">匯入圖片</span>
           <input type="file" accept="image/*" onChange={handleImageChange} className="sr-only" />
         </label>
-        <button className="ml-1 flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-sm shadow-primary/20 transition hover:bg-primary-hover">
+        <button
+          type="button"
+          onClick={onExport}
+          disabled={!canExport}
+          className="ml-1 flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground shadow-sm shadow-primary/20 transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40"
+        >
           <Download size={16} /> <span className="hidden sm:inline">匯出 PNG</span>
         </button>
       </div>
