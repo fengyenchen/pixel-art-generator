@@ -4,11 +4,20 @@ import Toolbar from './components/Toolbar'
 import PixelCanvas from './components/Canvas/PixelCanvas'
 import ControlPanel from './components/ControlPanel'
 import HelpModal from './components/HelpModal'
+import CropEditor from './components/CropEditor'
 import type { EditorTool } from './types/editor'
 import { downloadCanvasAsPng } from './utils/exportHelpers'
 import { captureCanvasSnapshot, restoreCanvasSnapshot } from './utils/canvasHelpers'
 import { useEditorStore } from './store/useEditorStore'
 import { downloadProject, projectPixelsToImage, readProject } from './utils/projectHelpers'
+import { cropImageBitmap, downloadCroppedImage } from './utils/cropImage'
+import type { CropRect } from './types/crop'
+
+interface CropSession {
+  image: ImageBitmap
+  name: string
+  isNewImage: boolean
+}
 
 function App() {
   const [activeTool, setActiveTool] = useState<EditorTool>('pencil')
@@ -19,6 +28,8 @@ function App() {
   const [zoom, setZoom] = useState(200)
   const [color, setColor] = useState('#52525b')
   const [sourceImage, setSourceImage] = useState<ImageBitmap | null>(null)
+  const [originalImage, setOriginalImage] = useState<ImageBitmap | null>(null)
+  const [cropSession, setCropSession] = useState<CropSession | null>(null)
   const [imageName, setImageName] = useState<string>()
   const [paletteSize, setPaletteSize] = useState(3)
   const [cleanNoise, setCleanNoise] = useState(true)
@@ -36,6 +47,7 @@ function App() {
 
   // sourceImage 變更或元件卸載時，釋放 ImageBitmap 資源，避免記憶體洩漏
   useEffect(() => () => sourceImage?.close(), [sourceImage])
+  useEffect(() => () => originalImage?.close(), [originalImage])
   useEffect(() => clearHistory(), [sourceImage, clearHistory])
 
   useEffect(() => {
@@ -53,15 +65,43 @@ function App() {
 
   const handleImageSelect = async (file: File) => {
     const image = await createImageBitmap(file)
-    const fitScale = Math.min(1, 256 / image.width, 256 / image.height)
-    const fittedWidth = Math.max(4, Math.min(256, Math.round((image.width * fitScale) / 4) * 4))
-    const fittedHeight = Math.max(4, Math.min(256, Math.round((image.height * fitScale) / 4) * 4))
+    if (cropSession?.isNewImage) cropSession.image.close()
+    setCropSession({ image, name: file.name, isNewImage: true })
+  }
 
-    setSourceImage(image)
+  const fitCanvasToImage = (image: ImageBitmap) => {
+    const fitScale = Math.min(1, 256 / image.width, 256 / image.height)
+    return {
+      width: Math.max(4, Math.min(256, Math.round((image.width * fitScale) / 4) * 4)),
+      height: Math.max(4, Math.min(256, Math.round((image.height * fitScale) / 4) * 4)),
+    }
+  }
+
+  const handleApplyCrop = async (crop: CropRect) => {
+    if (!cropSession) return
+    const croppedImage = await cropImageBitmap(cropSession.image, crop)
+    const size = fitCanvasToImage(croppedImage)
+
+    if (cropSession.isNewImage) setOriginalImage(cropSession.image)
+    setSourceImage(croppedImage)
     setHasManualEdits(false)
-    setImageName(file.name)
-    setCanvasWidth(fittedWidth)
-    setCanvasHeight(fittedHeight)
+    setImageName(cropSession.name)
+    setCanvasWidth(size.width)
+    setCanvasHeight(size.height)
+    setCropSession(null)
+  }
+
+  const handleDownloadCrop = async (crop: CropRect) => {
+    if (!cropSession) return
+    const baseName = cropSession.name.replace(/\.[^.]+$/, '') || 'cropped-image'
+    await downloadCroppedImage(cropSession.image, crop, `${baseName}-cropped.png`)
+    if (cropSession.isNewImage) cropSession.image.close()
+    setCropSession(null)
+  }
+
+  const handleCancelCrop = () => {
+    if (cropSession?.isNewImage) cropSession.image.close()
+    setCropSession(null)
   }
 
   const handleCanvasReady = useCallback((canvas: HTMLCanvasElement | null) => {
@@ -170,6 +210,7 @@ function App() {
 
       setProjectError(undefined)
       setSourceImage(null)
+      setOriginalImage(null)
       setHasManualEdits(true)
       setPendingProjectImage(image)
       setImageName(file.name)
@@ -191,6 +232,8 @@ function App() {
       <Header
         imageName={imageName}
         onImageSelect={handleImageSelect}
+        onOpenCrop={() => originalImage && setCropSession({ image: originalImage, name: imageName ?? 'image', isNewImage: false })}
+        canCrop={Boolean(originalImage)}
         onExport={handleExport}
         canExport={Boolean(sourceImage || hasManualEdits)}
         onUndo={handleUndo}
@@ -250,6 +293,16 @@ function App() {
       </main>
 
       {isHelpOpen && <HelpModal onClose={() => setIsHelpOpen(false)} />}
+
+      {cropSession && (
+        <CropEditor
+          image={cropSession.image}
+          imageName={cropSession.name}
+          onCancel={handleCancelCrop}
+          onApply={handleApplyCrop}
+          onDownload={handleDownloadCrop}
+        />
+      )}
 
       {projectError && (
         <button

@@ -1,10 +1,10 @@
-import { Blocks, Undo2, Redo2, ImagePlus, Download, CircleHelp, FolderOpen, Save } from 'lucide-react'
+import { Blocks, Undo2, Redo2, ImagePlus, Download, CircleHelp, FolderOpen, Save, Crop } from 'lucide-react'
 import type { ChangeEvent } from 'react'
 import type { HeaderProps } from '../types/header'
 
-const iconButton = 'grid size-9 place-items-center rounded-lg text-muted-foreground transition hover:bg-accent hover:text-accent-foreground disabled:opacity-40'
+const iconButton = 'grid h-11 w-full place-items-center rounded-lg text-muted-foreground transition hover:bg-accent hover:text-accent-foreground disabled:opacity-40 sm:size-9'
 
-export default function Header({ imageName, onImageSelect, onExport, canExport, onUndo, onRedo, canUndo, canRedo, onOpenHelp, onSaveProject, onLoadProject }: HeaderProps) {
+export default function Header({ imageName, onImageSelect, onOpenCrop, canCrop, onExport, canExport, onUndo, onRedo, canUndo, canRedo, onOpenHelp, onSaveProject, onLoadProject }: HeaderProps) {
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) void onImageSelect(file)
@@ -29,7 +29,7 @@ export default function Header({ imageName, onImageSelect, onExport, canExport, 
         </div>
       </div>
 
-      <div className="mt-3 flex w-full items-center justify-between gap-1 border-t border-border-subtle pt-3 lg:mt-0 lg:w-auto lg:justify-start lg:border-0 lg:pt-0">
+      <div className="mt-3 grid w-full grid-cols-6 items-center gap-1 border-t border-border-subtle pt-3 sm:flex sm:justify-between lg:mt-0 lg:w-auto lg:justify-start lg:border-0 lg:pt-0">
         <button type="button" className={iconButton} title="使用說明" onClick={onOpenHelp}><CircleHelp size={18} /></button>
         <button type="button" className={iconButton} title="儲存專案" onClick={onSaveProject}><Save size={18} /></button>
         <label className={`${iconButton} cursor-pointer`} title="載入專案">
@@ -38,8 +38,9 @@ export default function Header({ imageName, onImageSelect, onExport, canExport, 
         </label>
         <button type="button" className={iconButton} title="復原 (Ctrl+Z)" onClick={onUndo} disabled={!canUndo}><Undo2 size={18} /></button>
         <button type="button" className={iconButton} title="重做 (Ctrl+Y)" onClick={onRedo} disabled={!canRedo}><Redo2 size={18} /></button>
+        <button type="button" className={iconButton} title="重新裁切原圖" aria-label="重新裁切原圖" onClick={onOpenCrop} disabled={!canCrop}><Crop size={18} /></button>
         <div className="mx-2 hidden h-6 w-px bg-border lg:block" />
-        <label className="flex h-9 w-9 cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-card px-0 text-md font-medium text-secondary-foreground shadow-sm transition hover:bg-accent lg:w-30 lg:px-3">
+        <label className="flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-card px-0 text-md font-medium text-secondary-foreground shadow-sm transition hover:bg-accent sm:h-9 sm:w-9 lg:w-30 lg:px-3">
           <ImagePlus size={16} /> <span className="hidden lg:inline">匯入圖片</span>
           <input type="file" accept="image/*" onChange={handleImageChange} className="sr-only" />
         </label>
@@ -47,7 +48,7 @@ export default function Header({ imageName, onImageSelect, onExport, canExport, 
           type="button"
           onClick={onExport}
           disabled={!canExport}
-          className="ml-1 flex h-9 w-9 items-center justify-center gap-2 rounded-lg border border-primary bg-primary px-0 text-sm font-medium text-primary-foreground shadow-sm shadow-primary/20 transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40 lg:w-32.5 lg:px-3"
+          className="flex h-11 w-full items-center justify-center gap-2 rounded-lg border border-primary bg-primary px-0 text-sm font-medium text-primary-foreground shadow-sm shadow-primary/20 transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-40 sm:ml-1 sm:h-9 sm:w-9 lg:w-32.5 lg:px-3"
         >
           <Download size={16} /> <span className="hidden lg:inline">匯出 PNG</span>
         </button>

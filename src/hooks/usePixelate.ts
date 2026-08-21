@@ -5,7 +5,10 @@ import { drawPixelatedImage } from '../utils/pixelate'
 export function usePixelate({ sourceImage, width, height, pixelSize, paletteSize, cleanNoise, hasManualEdits }: UsePixelateOptions) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const settingsRef = useRef({ pixelSize, paletteSize, cleanNoise, hasManualEdits })
-  settingsRef.current = { pixelSize, paletteSize, cleanNoise, hasManualEdits }
+
+  useEffect(() => {
+    settingsRef.current = { pixelSize, paletteSize, cleanNoise, hasManualEdits }
+  }, [pixelSize, paletteSize, cleanNoise, hasManualEdits])
 
   useEffect(() => {
     const canvas = canvasRef.current
