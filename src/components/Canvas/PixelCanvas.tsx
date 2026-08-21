@@ -1,14 +1,14 @@
 import { useState } from 'react'
-import type { DragEvent } from 'react'
+import type { DragEvent, PointerEvent as ReactPointerEvent } from 'react'
 import { Upload } from 'lucide-react'
 import type { PixelCanvasProps } from '../../types/canvas'
 import { usePixelate } from '../../hooks/usePixelate'
 import { useCanvasDraw } from '../../hooks/useCanvasDraw'
 
-export default function PixelCanvas({ width, height, pixelSize, showGrid, zoom, sourceImage, paletteSize, cleanNoise, hasManualEdits, onCanvasReady, activeTool, color, onColorChange, onEditStart, onImageSelect, onProjectLoad, shapeSettings }: PixelCanvasProps) {
+export default function PixelCanvas({ width, height, pixelSize, showGrid, zoom, sourceImage, paletteSize, cleanNoise, hasManualEdits, onCanvasReady, activeTool, color, onColorChange, onEditStart, onImageSelect, onProjectLoad, shapeSettings, selection, onSelectionChange }: PixelCanvasProps) {
   const [isDraggingImage, setIsDraggingImage] = useState(false)
   const canvasRef = usePixelate({ sourceImage, width, height, pixelSize, paletteSize, cleanNoise, hasManualEdits })
-  const pointerHandlers = useCanvasDraw({ canvasRef, activeTool, color, pixelSize, onColorChange, onEditStart, shapeSettings })
+  const pointerHandlers = useCanvasDraw({ canvasRef, activeTool, color, pixelSize, onColorChange, onEditStart, shapeSettings, selection, onSelectionChange })
   const scale = zoom / 100
   const displayWidth = Math.max(1, width * scale)
   const displayHeight = Math.max(1, height * scale)
@@ -32,6 +32,13 @@ export default function PixelCanvas({ width, height, pixelSize, showGrid, zoom, 
     }
   }
 
+  const handleWorkspacePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (activeTool !== 'marquee' || !selection) return
+    const target = event.target
+    if (target instanceof Element && target.closest('canvas')) return
+    onSelectionChange(null)
+  }
+
   return (
     <section
       className="relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-border bg-canvas-workspace shadow-sm"
@@ -50,7 +57,7 @@ export default function PixelCanvas({ width, height, pixelSize, showGrid, zoom, 
         <span>{columns} × {rows} 格 · {zoom}%</span>
       </div>
 
-      <div className="canvas-workspace min-h-130 flex-1 overflow-auto">
+      <div className="canvas-workspace min-h-130 flex-1 overflow-auto" onPointerDown={handleWorkspacePointerDown}>
         <div className="grid h-max min-h-full w-max min-w-full place-items-center p-10">
           <div
             className="relative box-content shrink-0 overflow-hidden border border-border-strong bg-canvas shadow-xl shadow-primary/20"
@@ -61,18 +68,18 @@ export default function PixelCanvas({ width, height, pixelSize, showGrid, zoom, 
                 canvasRef.current = canvas
                 onCanvasReady(canvas)
               }}
-              className="absolute inset-0 h-full w-full touch-none select-none"
+              className={`absolute inset-0 h-full w-full touch-none select-none ${activeTool === 'marquee' ? 'cursor-crosshair' : activeTool === 'move' ? 'cursor-move' : ''}`}
               style={{ imageRendering: 'pixelated', touchAction: 'none' }}
               {...pointerHandlers}
             />
-            {showGrid && (
+            {(showGrid || (selection && (activeTool === 'marquee' || activeTool === 'move'))) && (
               <svg
                 className="pointer-events-none absolute inset-0 size-full"
                 viewBox={`0 0 ${width} ${height}`}
                 preserveAspectRatio="none"
                 aria-hidden="true"
               >
-                {verticalLines.map((position) => (
+                {showGrid && verticalLines.map((position) => (
                   <line
                     key={`vertical-${position}`}
                     x1={position}
@@ -84,7 +91,7 @@ export default function PixelCanvas({ width, height, pixelSize, showGrid, zoom, 
                     vectorEffect="non-scaling-stroke"
                   />
                 ))}
-                {horizontalLines.map((position) => (
+                {showGrid && horizontalLines.map((position) => (
                   <line
                     key={`horizontal-${position}`}
                     x1={0}
@@ -96,6 +103,12 @@ export default function PixelCanvas({ width, height, pixelSize, showGrid, zoom, 
                     vectorEffect="non-scaling-stroke"
                   />
                 ))}
+                {selection && (activeTool === 'marquee' || activeTool === 'move') && (
+                  <>
+                    <rect x={selection.x} y={selection.y} width={selection.width} height={selection.height} fill="none" stroke="rgba(15,23,42,.85)" strokeWidth={2} vectorEffect="non-scaling-stroke" />
+                    <rect x={selection.x} y={selection.y} width={selection.width} height={selection.height} fill="rgba(255,255,255,.06)" stroke="white" strokeWidth={1} strokeDasharray="5 4" vectorEffect="non-scaling-stroke" />
+                  </>
+                )}
               </svg>
             )}
           </div>

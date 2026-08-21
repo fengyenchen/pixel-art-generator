@@ -12,6 +12,7 @@ import { useEditorStore } from './store/useEditorStore'
 import { downloadProject, projectPixelsToImage, readProject } from './utils/projectHelpers'
 import { cropImageBitmap, downloadCroppedImage } from './utils/cropImage'
 import type { CropRect } from './types/crop'
+import type { CanvasSelection } from './types/canvasDraw'
 
 interface CropSession {
   image: ImageBitmap
@@ -24,6 +25,7 @@ function App() {
   const [shapeKind, setShapeKind] = useState<ShapeKind>('rectangle')
   const [shapeStyle, setShapeStyle] = useState<ShapeStyle>('fill')
   const [shapeStrokeWidth, setShapeStrokeWidth] = useState(1)
+  const [selection, setSelection] = useState<CanvasSelection | null>(null)
   const [canvasWidth, setCanvasWidth] = useState(256)
   const [canvasHeight, setCanvasHeight] = useState(256)
   const [showGrid, setShowGrid] = useState(true)
@@ -87,6 +89,7 @@ function App() {
 
     if (cropSession.isNewImage) setOriginalImage(cropSession.image)
     setSourceImage(croppedImage)
+    setSelection(null)
     setHasManualEdits(false)
     setImageName(cropSession.name)
     setCanvasWidth(size.width)
@@ -128,6 +131,7 @@ function App() {
 
     setCanvasWidth(width)
     setCanvasHeight(height)
+    setSelection(null)
   }, [canvasWidth, canvasHeight, record])
 
   const handleUndo = useCallback(() => {
@@ -139,6 +143,7 @@ function App() {
     if (previous && restoreCanvasSnapshot(canvas, previous)) {
       setCanvasWidth(previous.width)
       setCanvasHeight(previous.height)
+      setSelection(null)
     }
   }, [undo])
 
@@ -151,6 +156,7 @@ function App() {
     if (next && restoreCanvasSnapshot(canvas, next)) {
       setCanvasWidth(next.width)
       setCanvasHeight(next.height)
+      setSelection(null)
     }
   }, [redo])
 
@@ -163,6 +169,7 @@ function App() {
     if (snapshot) record(snapshot)
     context.clearRect(0, 0, canvas.width, canvas.height)
     setHasManualEdits(true)
+    setSelection(null)
   }, [record])
 
   useEffect(() => {
@@ -214,6 +221,7 @@ function App() {
       setProjectError(undefined)
       setSourceImage(null)
       setOriginalImage(null)
+      setSelection(null)
       setHasManualEdits(true)
       setPendingProjectImage(image)
       setImageName(file.name)
@@ -253,7 +261,10 @@ function App() {
           activeTool={activeTool}
           color={color}
           onColorChange={setColor}
-          onToolChange={setActiveTool}
+          onToolChange={(tool) => {
+            setActiveTool(tool)
+            if (tool !== 'marquee' && tool !== 'move') setSelection(null)
+          }}
           onClear={handleClearCanvas}
           shapeKind={shapeKind}
           shapeStyle={shapeStyle}
@@ -281,6 +292,8 @@ function App() {
           onImageSelect={handleImageSelect}
           onProjectLoad={handleLoadProject}
           shapeSettings={{ kind: shapeKind, style: shapeStyle, strokeWidth: shapeStrokeWidth }}
+          selection={selection}
+          onSelectionChange={setSelection}
         />
 
         <ControlPanel

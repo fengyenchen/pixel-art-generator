@@ -21,6 +21,8 @@ export interface PixelCanvasProps {
   onImageSelect: (file: File) => Promise<void>
   onProjectLoad: (file: File) => Promise<void>
   shapeSettings: ShapeSettings
+  selection: CanvasSelection | null
+  onSelectionChange: (selection: CanvasSelection | null) => void
 }
 
 export interface UsePixelateOptions {
@@ -33,3 +35,4 @@ export interface UsePixelateOptions {
   hasManualEdits: boolean
 }
 import type { EditorTool, ShapeSettings } from './editor'
+import type { CanvasSelection } from './canvasDraw'

@@ -1,5 +1,7 @@
 export type EditorTool =
   | 'select'
+  | 'marquee'
+  | 'move'
   | 'pencil'
   | 'eraser'
   | 'fill'

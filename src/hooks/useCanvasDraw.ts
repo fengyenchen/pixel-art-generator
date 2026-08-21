@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
-import type { CanvasPointerHandlers, UseCanvasDrawOptions } from '../types/canvasDraw'
+import type { CanvasPointerHandlers, CanvasSelection, UseCanvasDrawOptions } from '../types/canvasDraw'
 
 interface CanvasPoint {
   x: number
@@ -20,11 +20,17 @@ const rgbaMatches = (data: Uint8ClampedArray, index: number, color: number[]) =>
 
 const toHex = (value: number) => value.toString(16).padStart(2, '0')
 
-export function useCanvasDraw({ canvasRef, activeTool, color, pixelSize, onColorChange, onEditStart, shapeSettings }: UseCanvasDrawOptions): CanvasPointerHandlers {
+export function useCanvasDraw({ canvasRef, activeTool, color, pixelSize, onColorChange, onEditStart, shapeSettings, selection, onSelectionChange }: UseCanvasDrawOptions): CanvasPointerHandlers {
   const isDrawingRef = useRef(false)
   const lastBlockRef = useRef<string | undefined>(undefined)
   const shapeStartRef = useRef<CanvasPoint | null>(null)
   const shapeSnapshotRef = useRef<ImageData | null>(null)
+  const marqueeStartRef = useRef<CanvasPoint | null>(null)
+  const moveStartRef = useRef<CanvasPoint | null>(null)
+  const moveOriginRef = useRef<CanvasSelection | null>(null)
+  const moveCanvasSnapshotRef = useRef<ImageData | null>(null)
+  const movePixelsRef = useRef<ImageData | null>(null)
+  const hasRecordedMoveRef = useRef(false)
 
   const getCanvasPoint = (event: ReactPointerEvent<HTMLCanvasElement>): CanvasPoint | null => {
     const canvas = canvasRef.current
@@ -101,6 +107,53 @@ export function useCanvasDraw({ canvasRef, activeTool, color, pixelSize, onColor
       column,
       row,
     }
+  }
+
+  const selectionFromPoints = (start: CanvasPoint, end: CanvasPoint): CanvasSelection => {
+    const canvas = canvasRef.current
+    const x = Math.min(start.blockX, end.blockX)
+    const y = Math.min(start.blockY, end.blockY)
+    const right = Math.max(start.blockX, end.blockX) + pixelSize
+    const bottom = Math.max(start.blockY, end.blockY) + pixelSize
+
+    return {
+      x,
+      y,
+      width: Math.max(1, Math.min(canvas?.width ?? right, right) - x),
+      height: Math.max(1, Math.min(canvas?.height ?? bottom, bottom) - y),
+    }
+  }
+
+  const pointIsInSelection = (point: CanvasPoint, current: CanvasSelection) => (
+    point.x >= current.x
+    && point.x < current.x + current.width
+    && point.y >= current.y
+    && point.y < current.y + current.height
+  )
+
+  const previewSelectionMove = (point: CanvasPoint) => {
+    const canvas = canvasRef.current
+    const context = canvas?.getContext('2d')
+    const start = moveStartRef.current
+    const origin = moveOriginRef.current
+    const snapshot = moveCanvasSnapshotRef.current
+    const pixels = movePixelsRef.current
+    if (!canvas || !context || !start || !origin || !snapshot || !pixels) return
+
+    const requestedX = origin.x + (point.column - start.column) * pixelSize
+    const requestedY = origin.y + (point.row - start.row) * pixelSize
+    const x = Math.min(canvas.width - origin.width, Math.max(0, requestedX))
+    const y = Math.min(canvas.height - origin.height, Math.max(0, requestedY))
+
+    if (!hasRecordedMoveRef.current && (x !== origin.x || y !== origin.y)) {
+      onEditStart(canvas)
+      hasRecordedMoveRef.current = true
+    }
+
+    context.putImageData(snapshot, 0, 0)
+    context.clearRect(origin.x, origin.y, origin.width, origin.height)
+    context.putImageData(pixels, x, y)
+    onSelectionChange({ ...origin, x, y })
   }
 
   const paintCell = (context: CanvasRenderingContext2D, canvas: HTMLCanvasElement, column: number, row: number) => {
@@ -272,6 +325,15 @@ export function useCanvasDraw({ canvasRef, activeTool, color, pixelSize, onColor
   }
 
   const finishDrawing = (event: ReactPointerEvent<HTMLCanvasElement>) => {
+    if (activeTool === 'marquee' && isDrawingRef.current) {
+      const point = getCanvasPoint(event)
+      const start = marqueeStartRef.current
+      if (point && start) onSelectionChange(selectionFromPoints(start, point))
+    }
+    if (activeTool === 'move' && isDrawingRef.current) {
+      const point = getCanvasPoint(event)
+      if (point) previewSelectionMove(point)
+    }
     if (activeTool === 'shape' && isDrawingRef.current) {
       const point = getCanvasPoint(event)
       const start = shapeStartRef.current
@@ -286,6 +348,12 @@ export function useCanvasDraw({ canvasRef, activeTool, color, pixelSize, onColor
     lastBlockRef.current = undefined
     shapeStartRef.current = null
     shapeSnapshotRef.current = null
+    marqueeStartRef.current = null
+    moveStartRef.current = null
+    moveOriginRef.current = null
+    moveCanvasSnapshotRef.current = null
+    movePixelsRef.current = null
+    hasRecordedMoveRef.current = false
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId)
     }
@@ -294,6 +362,32 @@ export function useCanvasDraw({ canvasRef, activeTool, color, pixelSize, onColor
   return {
     onPointerDown: (event) => {
       if (activeTool === 'select') return
+      if (activeTool === 'marquee') {
+        const point = getCanvasPoint(event)
+        if (!point) return
+        event.preventDefault()
+        event.currentTarget.setPointerCapture(event.pointerId)
+        isDrawingRef.current = true
+        marqueeStartRef.current = point
+        onSelectionChange(selectionFromPoints(point, point))
+        return
+      }
+
+      if (activeTool === 'move') {
+        const point = getCanvasPoint(event)
+        const context = event.currentTarget.getContext('2d')
+        if (!point || !selection || !context || !pointIsInSelection(point, selection)) return
+        event.preventDefault()
+        event.currentTarget.setPointerCapture(event.pointerId)
+        isDrawingRef.current = true
+        moveStartRef.current = point
+        moveOriginRef.current = selection
+        moveCanvasSnapshotRef.current = context.getImageData(0, 0, event.currentTarget.width, event.currentTarget.height)
+        movePixelsRef.current = context.getImageData(selection.x, selection.y, selection.width, selection.height)
+        hasRecordedMoveRef.current = false
+        return
+      }
+
       event.preventDefault()
       event.currentTarget.setPointerCapture(event.pointerId)
       isDrawingRef.current = true
@@ -313,6 +407,17 @@ export function useCanvasDraw({ canvasRef, activeTool, color, pixelSize, onColor
     onPointerMove: (event) => {
       if (!isDrawingRef.current) return
       event.preventDefault()
+      if (activeTool === 'marquee') {
+        const point = getCanvasPoint(event)
+        const start = marqueeStartRef.current
+        if (point && start) onSelectionChange(selectionFromPoints(start, point))
+        return
+      }
+      if (activeTool === 'move') {
+        const point = getCanvasPoint(event)
+        if (point) previewSelectionMove(point)
+        return
+      }
       if (activeTool === 'shape') {
         const point = getCanvasPoint(event)
         const start = shapeStartRef.current

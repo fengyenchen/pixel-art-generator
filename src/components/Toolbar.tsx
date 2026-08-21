@@ -1,12 +1,14 @@
 import { useState } from 'react'
-import { MousePointer2, Pencil, Eraser, PaintBucket, Pipette, Trash2, Shapes, Square, Circle, Minus } from 'lucide-react'
+import { MousePointer2, BoxSelect, Move, Pencil, Eraser, PaintBucket, Pipette, Trash2, Shapes, Square, Circle, Minus } from 'lucide-react'
 import type { ToolOption, ToolbarProps } from '../types/toolbar'
 import type { ShapeKind, ShapeStyle } from '../types/editor'
 import { SketchPicker } from 'react-color';
 import { Slider } from './ui/Slider'
 
 const tools: ToolOption[] = [
-    { id: 'select', label: '選取', icon: MousePointer2 },
+    { id: 'select', label: '指標', icon: MousePointer2 },
+    { id: 'marquee', label: '框選', icon: BoxSelect },
+    { id: 'move', label: '移動選取內容', icon: Move },
     { id: 'pencil', label: '鉛筆', icon: Pencil },
     { id: 'eraser', label: '橡皮擦', icon: Eraser },
     { id: 'fill', label: '填色', icon: PaintBucket },
