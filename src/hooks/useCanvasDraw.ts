@@ -7,6 +7,8 @@ interface CanvasPoint {
   y: number
   blockX: number
   blockY: number
+  column: number
+  row: number
 }
 
 const rgbaMatches = (data: Uint8ClampedArray, index: number, color: number[]) => (
@@ -18,9 +20,11 @@ const rgbaMatches = (data: Uint8ClampedArray, index: number, color: number[]) =>
 
 const toHex = (value: number) => value.toString(16).padStart(2, '0')
 
-export function useCanvasDraw({ canvasRef, activeTool, color, pixelSize, onColorChange, onEditStart }: UseCanvasDrawOptions): CanvasPointerHandlers {
+export function useCanvasDraw({ canvasRef, activeTool, color, pixelSize, onColorChange, onEditStart, shapeSettings }: UseCanvasDrawOptions): CanvasPointerHandlers {
   const isDrawingRef = useRef(false)
   const lastBlockRef = useRef<string | undefined>(undefined)
+  const shapeStartRef = useRef<CanvasPoint | null>(null)
+  const shapeSnapshotRef = useRef<ImageData | null>(null)
 
   const getCanvasPoint = (event: ReactPointerEvent<HTMLCanvasElement>): CanvasPoint | null => {
     const canvas = canvasRef.current
@@ -35,6 +39,148 @@ export function useCanvasDraw({ canvasRef, activeTool, color, pixelSize, onColor
       y,
       blockX: Math.floor(x / pixelSize) * pixelSize,
       blockY: Math.floor(y / pixelSize) * pixelSize,
+      column: Math.floor(x / pixelSize),
+      row: Math.floor(y / pixelSize),
+    }
+  }
+
+  const constrainShapePoint = (start: CanvasPoint, end: CanvasPoint, constrain: boolean) => {
+    const canvas = canvasRef.current
+    if (!canvas || !constrain) return end
+
+    const columns = Math.ceil(canvas.width / pixelSize)
+    const rows = Math.ceil(canvas.height / pixelSize)
+
+    if (shapeSettings.kind === 'line') {
+      const deltaColumn = end.column - start.column
+      const deltaRow = end.row - start.row
+      if (deltaColumn === 0 && deltaRow === 0) return end
+
+      const snappedAngle = Math.round(Math.atan2(deltaRow, deltaColumn) / (Math.PI / 4)) * (Math.PI / 4)
+      const columnDirection = Math.round(Math.cos(snappedAngle))
+      const rowDirection = Math.round(Math.sin(snappedAngle))
+      const requestedSize = columnDirection === 0
+        ? Math.abs(deltaRow)
+        : rowDirection === 0
+          ? Math.abs(deltaColumn)
+          : Math.max(Math.abs(deltaColumn), Math.abs(deltaRow))
+      const availableColumns = columnDirection > 0
+        ? columns - 1 - start.column
+        : columnDirection < 0 ? start.column : Number.POSITIVE_INFINITY
+      const availableRows = rowDirection > 0
+        ? rows - 1 - start.row
+        : rowDirection < 0 ? start.row : Number.POSITIVE_INFINITY
+      const size = Math.min(requestedSize, availableColumns, availableRows)
+      const column = start.column + columnDirection * size
+      const row = start.row + rowDirection * size
+
+      return {
+        x: column * pixelSize,
+        y: row * pixelSize,
+        blockX: column * pixelSize,
+        blockY: row * pixelSize,
+        column,
+        row,
+      }
+    }
+
+    const columnDirection = end.column >= start.column ? 1 : -1
+    const rowDirection = end.row >= start.row ? 1 : -1
+    const requestedSize = Math.max(Math.abs(end.column - start.column), Math.abs(end.row - start.row))
+    const availableColumns = columnDirection > 0 ? columns - 1 - start.column : start.column
+    const availableRows = rowDirection > 0 ? rows - 1 - start.row : start.row
+    const size = Math.min(requestedSize, availableColumns, availableRows)
+    const column = start.column + columnDirection * size
+    const row = start.row + rowDirection * size
+
+    return {
+      x: column * pixelSize,
+      y: row * pixelSize,
+      blockX: column * pixelSize,
+      blockY: row * pixelSize,
+      column,
+      row,
+    }
+  }
+
+  const paintCell = (context: CanvasRenderingContext2D, canvas: HTMLCanvasElement, column: number, row: number) => {
+    const blockX = column * pixelSize
+    const blockY = row * pixelSize
+    if (blockX < 0 || blockY < 0 || blockX >= canvas.width || blockY >= canvas.height) return
+    context.fillRect(blockX, blockY, Math.min(pixelSize, canvas.width - blockX), Math.min(pixelSize, canvas.height - blockY))
+  }
+
+  const drawLine = (context: CanvasRenderingContext2D, canvas: HTMLCanvasElement, start: CanvasPoint, end: CanvasPoint) => {
+    let x = start.column
+    let y = start.row
+    const dx = Math.abs(end.column - x)
+    const dy = Math.abs(end.row - y)
+    const stepX = x < end.column ? 1 : -1
+    const stepY = y < end.row ? 1 : -1
+    let error = dx - dy
+    const radiusBefore = Math.floor((shapeSettings.strokeWidth - 1) / 2)
+    const radiusAfter = Math.ceil((shapeSettings.strokeWidth - 1) / 2)
+
+    while (true) {
+      for (let offsetY = -radiusBefore; offsetY <= radiusAfter; offsetY += 1) {
+        for (let offsetX = -radiusBefore; offsetX <= radiusAfter; offsetX += 1) {
+          paintCell(context, canvas, x + offsetX, y + offsetY)
+        }
+      }
+      if (x === end.column && y === end.row) break
+      const doubledError = error * 2
+      if (doubledError > -dy) { error -= dy; x += stepX }
+      if (doubledError < dx) { error += dx; y += stepY }
+    }
+  }
+
+  const drawShape = (start: CanvasPoint, end: CanvasPoint) => {
+    const canvas = canvasRef.current
+    const context = canvas?.getContext('2d')
+    if (!canvas || !context) return
+
+    context.fillStyle = color
+    if (shapeSettings.kind === 'line') {
+      drawLine(context, canvas, start, end)
+      return
+    }
+
+    const left = Math.min(start.column, end.column)
+    const right = Math.max(start.column, end.column)
+    const top = Math.min(start.row, end.row)
+    const bottom = Math.max(start.row, end.row)
+    const width = right - left + 1
+    const height = bottom - top + 1
+
+    for (let row = top; row <= bottom; row += 1) {
+      for (let column = left; column <= right; column += 1) {
+        let shouldPaint: boolean
+
+        if (shapeSettings.kind === 'rectangle') {
+          shouldPaint = shapeSettings.style === 'fill'
+            || column - left < shapeSettings.strokeWidth
+            || right - column < shapeSettings.strokeWidth
+            || row - top < shapeSettings.strokeWidth
+            || bottom - row < shapeSettings.strokeWidth
+        } else {
+          const normalizedX = (column - left + 0.5 - width / 2) / (width / 2)
+          const normalizedY = (row - top + 0.5 - height / 2) / (height / 2)
+          const insideOuterEllipse = normalizedX ** 2 + normalizedY ** 2 <= 1
+
+          if (shapeSettings.style === 'fill') {
+            shouldPaint = insideOuterEllipse
+          } else {
+            const innerWidth = width - shapeSettings.strokeWidth * 2
+            const innerHeight = height - shapeSettings.strokeWidth * 2
+            const insideInnerEllipse = innerWidth > 0 && innerHeight > 0
+              && ((column - left + 0.5 - width / 2) / (innerWidth / 2)) ** 2
+                + ((row - top + 0.5 - height / 2) / (innerHeight / 2)) ** 2 <= 1
+            shouldPaint = insideOuterEllipse && !insideInnerEllipse
+          }
+        }
+
+        if (shouldPaint) paintCell(context, canvas, column, row)
+      }
     }
   }
 
@@ -126,8 +272,20 @@ export function useCanvasDraw({ canvasRef, activeTool, color, pixelSize, onColor
   }
 
   const finishDrawing = (event: ReactPointerEvent<HTMLCanvasElement>) => {
+    if (activeTool === 'shape' && isDrawingRef.current) {
+      const point = getCanvasPoint(event)
+      const start = shapeStartRef.current
+      const snapshot = shapeSnapshotRef.current
+      const context = event.currentTarget.getContext('2d')
+      if (point && start && snapshot && context) {
+        context.putImageData(snapshot, 0, 0)
+        drawShape(start, constrainShapePoint(start, point, event.shiftKey))
+      }
+    }
     isDrawingRef.current = false
     lastBlockRef.current = undefined
+    shapeStartRef.current = null
+    shapeSnapshotRef.current = null
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId)
     }
@@ -140,11 +298,33 @@ export function useCanvasDraw({ canvasRef, activeTool, color, pixelSize, onColor
       event.currentTarget.setPointerCapture(event.pointerId)
       isDrawingRef.current = true
       if (activeTool !== 'eyedropper') onEditStart(event.currentTarget)
+      if (activeTool === 'shape') {
+        const point = getCanvasPoint(event)
+        const context = event.currentTarget.getContext('2d')
+        if (point && context) {
+          shapeStartRef.current = point
+          shapeSnapshotRef.current = context.getImageData(0, 0, event.currentTarget.width, event.currentTarget.height)
+          drawShape(point, point)
+        }
+        return
+      }
       applyTool(event)
     },
     onPointerMove: (event) => {
-      if (!isDrawingRef.current || (activeTool !== 'pencil' && activeTool !== 'eraser')) return
+      if (!isDrawingRef.current) return
       event.preventDefault()
+      if (activeTool === 'shape') {
+        const point = getCanvasPoint(event)
+        const start = shapeStartRef.current
+        const snapshot = shapeSnapshotRef.current
+        const context = event.currentTarget.getContext('2d')
+        if (point && start && snapshot && context) {
+          context.putImageData(snapshot, 0, 0)
+          drawShape(start, constrainShapePoint(start, point, event.shiftKey))
+        }
+        return
+      }
+      if (activeTool !== 'pencil' && activeTool !== 'eraser') return
       applyTool(event)
     },
     onPointerUp: finishDrawing,

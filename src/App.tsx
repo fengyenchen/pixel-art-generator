@@ -5,7 +5,7 @@ import PixelCanvas from './components/Canvas/PixelCanvas'
 import ControlPanel from './components/ControlPanel'
 import HelpModal from './components/HelpModal'
 import CropEditor from './components/CropEditor'
-import type { EditorTool } from './types/editor'
+import type { EditorTool, ShapeKind, ShapeStyle } from './types/editor'
 import { downloadCanvasAsPng } from './utils/exportHelpers'
 import { captureCanvasSnapshot, restoreCanvasSnapshot } from './utils/canvasHelpers'
 import { useEditorStore } from './store/useEditorStore'
@@ -21,6 +21,9 @@ interface CropSession {
 
 function App() {
   const [activeTool, setActiveTool] = useState<EditorTool>('pencil')
+  const [shapeKind, setShapeKind] = useState<ShapeKind>('rectangle')
+  const [shapeStyle, setShapeStyle] = useState<ShapeStyle>('fill')
+  const [shapeStrokeWidth, setShapeStrokeWidth] = useState(1)
   const [canvasWidth, setCanvasWidth] = useState(256)
   const [canvasHeight, setCanvasHeight] = useState(256)
   const [showGrid, setShowGrid] = useState(true)
@@ -252,6 +255,12 @@ function App() {
           onColorChange={setColor}
           onToolChange={setActiveTool}
           onClear={handleClearCanvas}
+          shapeKind={shapeKind}
+          shapeStyle={shapeStyle}
+          shapeStrokeWidth={shapeStrokeWidth}
+          onShapeKindChange={setShapeKind}
+          onShapeStyleChange={setShapeStyle}
+          onShapeStrokeWidthChange={setShapeStrokeWidth}
         />
 
         <PixelCanvas
@@ -271,6 +280,7 @@ function App() {
           onEditStart={handleEditStart}
           onImageSelect={handleImageSelect}
           onProjectLoad={handleLoadProject}
+          shapeSettings={{ kind: shapeKind, style: shapeStyle, strokeWidth: shapeStrokeWidth }}
         />
 
         <ControlPanel

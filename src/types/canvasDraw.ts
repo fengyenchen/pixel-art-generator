@@ -1,5 +1,5 @@
 import type { PointerEvent as ReactPointerEvent, RefObject } from 'react'
-import type { EditorTool } from './editor'
+import type { EditorTool, ShapeSettings } from './editor'
 
 export interface UseCanvasDrawOptions {
   canvasRef: RefObject<HTMLCanvasElement | null>
@@ -8,6 +8,7 @@ export interface UseCanvasDrawOptions {
   pixelSize: number
   onColorChange: (color: string) => void
   onEditStart: (canvas: HTMLCanvasElement) => void
+  shapeSettings: ShapeSettings
 }
 
 export interface CanvasPointerHandlers {

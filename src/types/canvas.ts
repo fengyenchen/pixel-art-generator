@@ -20,6 +20,7 @@ export interface PixelCanvasProps {
   onEditStart: (canvas: HTMLCanvasElement) => void
   onImageSelect: (file: File) => Promise<void>
   onProjectLoad: (file: File) => Promise<void>
+  shapeSettings: ShapeSettings
 }
 
 export interface UsePixelateOptions {
@@ -31,4 +32,4 @@ export interface UsePixelateOptions {
   cleanNoise: boolean
   hasManualEdits: boolean
 }
-import type { EditorTool } from './editor'
+import type { EditorTool, ShapeSettings } from './editor'
